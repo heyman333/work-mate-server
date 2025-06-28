@@ -30,7 +30,7 @@ const setCookieWithToken = (res: express.Response, userId: string): void => {
   res.cookie("auth_token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 24 * 60 * 60 * 1000,
   });
 };
@@ -52,7 +52,11 @@ const setCookieWithToken = (res: express.Response, userId: string): void => {
  *               $ref: '#/components/schemas/SuccessResponse'
  */
 router.post("/logout", (req, res) => {
-  res.clearCookie("auth_token");
+  res.clearCookie("auth_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
   res.json({ message: "로그아웃되었습니다." });
 });
 
