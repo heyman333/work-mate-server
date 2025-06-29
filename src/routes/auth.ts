@@ -1,5 +1,6 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import axios from "axios";
 import { UserModel } from "../models/User";
 
 /**
@@ -257,6 +258,129 @@ router.get("/me", (req, res) => {
     res.json({ user: req.user });
   } else {
     res.status(401).json({ error: "인증되지 않은 사용자입니다." });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/github/callback:
+ *   post:
+ *     summary: Handle GitHub OAuth callback
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: Authorization code from GitHub
+ *             required:
+ *               - code
+ *     responses:
+ *       200:
+ *         description: GitHub OAuth success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                     login:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     avatar_url:
+ *                       type: string
+ *       400:
+ *         description: Invalid code or missing parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post("/github/callback", async (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ error: "Authorization code is required" });
+  }
+
+  try {
+    const tokenResponse = await axios.post(
+      "https://github.com/login/oauth/access_token",
+      {
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code: code,
+      },
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+
+    const { access_token } = tokenResponse.data;
+
+    if (!access_token) {
+      return res.status(400).json({ error: "Failed to get access token" });
+    }
+
+    console.log("access_token", access_token);
+
+    const [userResponse, emailsResponse] = await Promise.all([
+      axios.get("https://api.github.com/user", {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      }),
+      axios
+        .get("https://api.github.com/user/emails", {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        })
+        .catch((error) => {
+          console.log(
+            "Failed to fetch emails:",
+            error.response?.status,
+            error.response?.data
+          );
+          return { data: [] };
+        }),
+    ]);
+
+    const primaryEmail = emailsResponse.data.find(
+      (email: any) => email.primary
+    );
+
+    res.json({
+      access_token,
+      user: {
+        ...userResponse.data,
+        email: primaryEmail?.email ?? "",
+      },
+    });
+  } catch (error) {
+    console.error("GitHub OAuth error:", error);
+    return res.status(500).json({ error: "GitHub OAuth failed" });
   }
 });
 

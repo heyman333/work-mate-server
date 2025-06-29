@@ -28,6 +28,28 @@ declare global {
   }
 }
 
+const generateToken = (userId: string): string => {
+  const payload = {
+    userId,
+    iat: Date.now(),
+  };
+
+  const expiresIn = "24h";
+
+  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+};
+
+const setCookieWithToken = (res: Response, userId: string): void => {
+  const token = generateToken(userId);
+
+  res.cookie("auth_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+};
+
 export const authenticateJWT = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.cookies.auth_token;
@@ -45,6 +67,14 @@ export const authenticateJWT = async (req: Request, res: Response, next: NextFun
       req.user = undefined;
       req.isAuthenticated = () => false;
       return next();
+    }
+
+    const tokenIssuedAt = decoded.iat;
+    const currentTime = Date.now();
+    const twoHoursInMs = 2 * 60 * 60 * 1000;
+
+    if (currentTime - tokenIssuedAt <= twoHoursInMs) {
+      setCookieWithToken(res, decoded.userId);
     }
 
     req.user = user;
