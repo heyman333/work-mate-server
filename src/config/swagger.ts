@@ -1,6 +1,7 @@
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Application } from 'express';
+import YAML from 'yaml';
 
 const options: swaggerJSDoc.Options = {
   definition: {
@@ -142,6 +143,12 @@ const specs = swaggerJSDoc(options);
 
 export const setupSwagger = (app: Application): void => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+  
+  // YAML 파일 서빙
+  app.get('/swagger.yaml', (_req, res) => {
+    res.setHeader('Content-Type', 'application/x-yaml');
+    res.send(YAML.stringify(specs));
+  });
 };
 
 export default specs;
