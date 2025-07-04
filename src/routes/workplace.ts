@@ -108,7 +108,9 @@ router.post("/", authenticateJWT, async (req, res) => {
     });
   } catch (error) {
     console.error("작업 장소 생성 오류:", error);
-    return res.status(500).json({ error: "작업 장소 생성 중 오류가 발생했습니다." });
+    return res
+      .status(500)
+      .json({ error: "작업 장소 생성 중 오류가 발생했습니다." });
   }
 });
 
@@ -166,13 +168,15 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
 
   try {
     const workPlace = await WorkPlaceModel.findById(id);
-    
+
     if (!workPlace) {
       return res.status(404).json({ error: "작업 장소를 찾을 수 없습니다." });
     }
 
     if (workPlace.userId.toString() !== userId) {
-      return res.status(403).json({ error: "작업 장소를 삭제할 권한이 없습니다." });
+      return res
+        .status(403)
+        .json({ error: "작업 장소를 삭제할 권한이 없습니다." });
     }
 
     const deleted = await WorkPlaceModel.delete(id);
@@ -184,7 +188,9 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
     }
   } catch (error) {
     console.error("작업 장소 삭제 오류:", error);
-    return res.status(500).json({ error: "작업 장소 삭제 중 오류가 발생했습니다." });
+    return res
+      .status(500)
+      .json({ error: "작업 장소 삭제 중 오류가 발생했습니다." });
   }
 });
 
@@ -230,9 +236,9 @@ router.get("/", authenticateJWT, async (req, res) => {
 
   try {
     const workPlaces = await WorkPlaceModel.findByUserId(userId);
-    
+
     return res.json({
-      workPlaces: workPlaces.map(wp => ({
+      workPlaces: workPlaces.map((wp) => ({
         id: wp._id,
         name: wp.name,
         latitude: wp.latitude,
@@ -244,7 +250,91 @@ router.get("/", authenticateJWT, async (req, res) => {
     });
   } catch (error) {
     console.error("작업 장소 조회 오류:", error);
-    return res.status(500).json({ error: "작업 장소 조회 중 오류가 발생했습니다." });
+    return res
+      .status(500)
+      .json({ error: "작업 장소 조회 중 오류가 발생했습니다." });
+  }
+});
+
+/**
+ * @swagger
+ * /workplace/all:
+ *   get:
+ *     summary: Get all work places with creator information
+ *     tags: [WorkPlace]
+ *     responses:
+ *       200:
+ *         description: All work places with creator information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 workPlaces:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       latitude:
+ *                         type: number
+ *                       longitude:
+ *                         type: number
+ *                       description:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       creator:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           profileImage:
+ *                             type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/all", async (req, res) => {
+  try {
+    const workPlaces = await WorkPlaceModel.findAllWithCreators();
+
+    return res.json({
+      workPlaces: workPlaces.map((wp) => ({
+        id: wp._id,
+        name: wp.name,
+        latitude: wp.latitude,
+        longitude: wp.longitude,
+        description: wp.description,
+        createdAt: wp.createdAt,
+        updatedAt: wp.updatedAt,
+        creator: {
+          id: wp.creator._id,
+          name: wp.creator.name,
+          email: wp.creator.email,
+          profileImage: wp.creator.profileImage,
+        },
+      })),
+    });
+  } catch (error) {
+    console.error("모든 작업 장소 조회 오류:", error);
+    return res
+      .status(500)
+      .json({ error: "모든 작업 장소 조회 중 오류가 발생했습니다." });
   }
 });
 

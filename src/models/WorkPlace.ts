@@ -81,4 +81,40 @@ export class WorkPlaceModel {
       longitude: { $gte: longitude - radius, $lte: longitude + radius }
     }).toArray();
   }
+
+  static async findAllWithCreators(): Promise<(WorkPlace & { creator: { _id: ObjectId; name: string; email: string; profileImage?: string } })[]> {
+    const result = await this.collection.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "creator"
+        }
+      },
+      {
+        $unwind: "$creator"
+      },
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          name: 1,
+          latitude: 1,
+          longitude: 1,
+          description: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          creator: {
+            _id: "$creator._id",
+            name: "$creator.name",
+            email: "$creator.email",
+            profileImage: "$creator.profileImage"
+          }
+        }
+      }
+    ]).toArray();
+    
+    return result as (WorkPlace & { creator: { _id: ObjectId; name: string; email: string; profileImage?: string } })[];
+  }
 }

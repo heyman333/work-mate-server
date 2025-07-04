@@ -8,7 +8,7 @@ import { authenticateJWT } from "./middleware/auth";
 import { connectDB } from "./config/database";
 import { setupSwagger } from "./config/swagger";
 import authRoutes from "./routes/auth";
-
+import workPlaceRoutes from "./routes/workplace";
 dotenv.config();
 
 const app = express();
@@ -29,6 +29,7 @@ app.use(cookieParser());
 app.use(authenticateJWT);
 
 app.use("/auth", authRoutes);
+app.use("/workplace", workPlaceRoutes);
 
 setupSwagger(app);
 
