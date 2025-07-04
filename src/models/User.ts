@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getDB } from "../config/database";
+import { WorkPlaceModel } from "./WorkPlace";
 
 export interface User {
   _id?: ObjectId;
@@ -71,5 +72,9 @@ export class UserModel {
       { _id: objectId },
       { $set: { lastLoginAt: new Date(), updatedAt: new Date() } }
     );
+  }
+
+  static async getWorkPlaces(userId: string | ObjectId) {
+    return await WorkPlaceModel.findByUserId(userId);
   }
 }
