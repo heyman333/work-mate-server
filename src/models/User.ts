@@ -9,6 +9,12 @@ export interface User {
   profileImage?: string;
   githubId?: string;
   googleId?: string;
+  skillSet?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  company?: string;
+  mbti?: string;
+  collaborationGoal?: string;
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt?: Date;
@@ -20,6 +26,12 @@ export interface CreateUserInput {
   profileImage?: string;
   githubId?: string;
   googleId?: string;
+  skillSet?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  company?: string;
+  mbti?: string;
+  collaborationGoal?: string;
 }
 
 export class UserModel {

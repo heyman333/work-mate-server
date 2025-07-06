@@ -105,10 +105,14 @@ router.post("/logout", (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 router.post("/join", async (req, res) => {
-  const { email, name, profileImage, githubId, googleId } = req.body;
+  const { email, name, profileImage, githubId, googleId, skillSet, githubUrl, linkedinUrl, company, mbti, collaborationGoal } = req.body;
 
   if (!email || !name) {
     return res.status(400).json({ error: "이메일과 이름은 필수입니다." });
+  }
+
+  if (collaborationGoal && collaborationGoal.length > 1000) {
+    return res.status(400).json({ error: "협업 목표는 최대 1000자까지 입력 가능합니다." });
   }
 
   try {
@@ -123,6 +127,12 @@ router.post("/join", async (req, res) => {
       profileImage,
       githubId,
       googleId,
+      skillSet,
+      githubUrl,
+      linkedinUrl,
+      company,
+      mbti,
+      collaborationGoal,
     });
 
     setCookieWithToken(res, newUser._id?.toString() || "");
@@ -136,6 +146,12 @@ router.post("/join", async (req, res) => {
         profileImage: newUser.profileImage,
         githubId: newUser.githubId,
         googleId: newUser.googleId,
+        skillSet: newUser.skillSet,
+        githubUrl: newUser.githubUrl,
+        linkedinUrl: newUser.linkedinUrl,
+        company: newUser.company,
+        mbti: newUser.mbti,
+        collaborationGoal: newUser.collaborationGoal,
       },
     });
   } catch (error) {
@@ -315,6 +331,135 @@ router.get("/me", (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+/**
+ * @swagger
+ * /auth/update:
+ *   put:
+ *     summary: Update user information
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: User name
+ *               profileImage:
+ *                 type: string
+ *                 description: User profile image URL
+ *               skillSet:
+ *                 type: string
+ *                 description: User's skill set
+ *               githubUrl:
+ *                 type: string
+ *                 description: GitHub profile URL
+ *               linkedinUrl:
+ *                 type: string
+ *                 description: LinkedIn profile URL
+ *               company:
+ *                 type: string
+ *                 description: User's company/organization
+ *               mbti:
+ *                 type: string
+ *                 description: User's MBTI type
+ *               collaborationGoal:
+ *                 type: string
+ *                 description: User's collaboration goal (max 1000 characters)
+ *                 maxLength: 1000
+ *     responses:
+ *       200:
+ *         description: User information updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put("/update", async (req, res) => {
+  const { name, profileImage, skillSet, githubUrl, linkedinUrl, company, mbti, collaborationGoal } = req.body;
+
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ error: "인증되지 않은 사용자입니다." });
+  }
+
+  if (collaborationGoal && collaborationGoal.length > 1000) {
+    return res.status(400).json({ error: "협업 목표는 최대 1000자까지 입력 가능합니다." });
+  }
+
+  try {
+    const updateData: any = {};
+    
+    if (name !== undefined) updateData.name = name;
+    if (profileImage !== undefined) updateData.profileImage = profileImage;
+    if (skillSet !== undefined) updateData.skillSet = skillSet;
+    if (githubUrl !== undefined) updateData.githubUrl = githubUrl;
+    if (linkedinUrl !== undefined) updateData.linkedinUrl = linkedinUrl;
+    if (company !== undefined) updateData.company = company;
+    if (mbti !== undefined) updateData.mbti = mbti;
+    if (collaborationGoal !== undefined) updateData.collaborationGoal = collaborationGoal;
+
+    const updatedUser = await UserModel.update(req.user._id, updateData);
+    
+    if (!updatedUser) {
+      return res.status(404).json({ error: "사용자를 찾을 수 없습니다." });
+    }
+
+    return res.json({
+      message: "사용자 정보가 업데이트되었습니다.",
+      user: {
+        id: updatedUser._id,
+        email: updatedUser.email,
+        name: updatedUser.name,
+        profileImage: updatedUser.profileImage,
+        githubId: updatedUser.githubId,
+        googleId: updatedUser.googleId,
+        skillSet: updatedUser.skillSet,
+        githubUrl: updatedUser.githubUrl,
+        linkedinUrl: updatedUser.linkedinUrl,
+        company: updatedUser.company,
+        mbti: updatedUser.mbti,
+        collaborationGoal: updatedUser.collaborationGoal,
+      },
+    });
+  } catch (error) {
+    console.error("사용자 정보 업데이트 오류:", error);
+    return res.status(500).json({ error: "사용자 정보 업데이트 중 오류가 발생했습니다." });
+  }
+});
+
 router.post("/github/callback", async (req, res) => {
   const { code } = req.body;
 

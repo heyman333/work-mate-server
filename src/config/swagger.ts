@@ -54,6 +54,31 @@ const options: swaggerJSDoc.Options = {
               type: "string",
               description: "Google ID",
             },
+            skillSet: {
+              type: "string",
+              description: "User's skill set",
+            },
+            githubUrl: {
+              type: "string",
+              description: "GitHub profile URL",
+            },
+            linkedinUrl: {
+              type: "string",
+              description: "LinkedIn profile URL",
+            },
+            company: {
+              type: "string",
+              description: "User's company/organization",
+            },
+            mbti: {
+              type: "string",
+              description: "User's MBTI type",
+            },
+            collaborationGoal: {
+              type: "string",
+              description: "User's collaboration goal (max 1000 characters)",
+              maxLength: 1000,
+            },
           },
         },
         UserJoinRequest: {
@@ -81,6 +106,31 @@ const options: swaggerJSDoc.Options = {
               type: "string",
               description: "Google ID",
             },
+            skillSet: {
+              type: "string",
+              description: "User's skill set",
+            },
+            githubUrl: {
+              type: "string",
+              description: "GitHub profile URL",
+            },
+            linkedinUrl: {
+              type: "string",
+              description: "LinkedIn profile URL",
+            },
+            company: {
+              type: "string",
+              description: "User's company/organization",
+            },
+            mbti: {
+              type: "string",
+              description: "User's MBTI type",
+            },
+            collaborationGoal: {
+              type: "string",
+              description: "User's collaboration goal (max 1000 characters)",
+              maxLength: 1000,
+            },
           },
         },
         UserCheckRequest: {
@@ -98,6 +148,31 @@ const options: swaggerJSDoc.Options = {
             googleId: {
               type: "string",
               description: "Google ID",
+            },
+            skillSet: {
+              type: "string",
+              description: "User's skill set",
+            },
+            githubUrl: {
+              type: "string",
+              description: "GitHub profile URL",
+            },
+            linkedinUrl: {
+              type: "string",
+              description: "LinkedIn profile URL",
+            },
+            company: {
+              type: "string",
+              description: "User's company/organization",
+            },
+            mbti: {
+              type: "string",
+              description: "User's MBTI type",
+            },
+            collaborationGoal: {
+              type: "string",
+              description: "User's collaboration goal (max 1000 characters)",
+              maxLength: 1000,
             },
           },
         },
