@@ -302,6 +302,31 @@ router.get("/", authenticateJWT, async (req, res) => {
  *                             type: string
  *                           profileImage:
  *                             type: string
+ *                           githubId:
+ *                             type: string
+ *                           googleId:
+ *                             type: string
+ *                           skillSet:
+ *                             type: string
+ *                           githubUrl:
+ *                             type: string
+ *                           linkedinUrl:
+ *                             type: string
+ *                           company:
+ *                             type: string
+ *                           mbti:
+ *                             type: string
+ *                           collaborationGoal:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                           lastLoginAt:
+ *                             type: string
+ *                             format: date-time
  *       500:
  *         description: Internal server error
  *         content:
@@ -327,6 +352,17 @@ router.get("/all", async (req, res) => {
           name: wp.creator.name,
           email: wp.creator.email,
           profileImage: wp.creator.profileImage,
+          githubId: wp.creator.githubId,
+          googleId: wp.creator.googleId,
+          skillSet: wp.creator.skillSet,
+          githubUrl: wp.creator.githubUrl,
+          linkedinUrl: wp.creator.linkedinUrl,
+          company: wp.creator.company,
+          mbti: wp.creator.mbti,
+          collaborationGoal: wp.creator.collaborationGoal,
+          createdAt: wp.creator.createdAt,
+          updatedAt: wp.creator.updatedAt,
+          lastLoginAt: wp.creator.lastLoginAt,
         },
       })),
     });

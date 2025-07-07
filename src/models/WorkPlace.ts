@@ -82,7 +82,7 @@ export class WorkPlaceModel {
     }).toArray();
   }
 
-  static async findAllWithCreators(): Promise<(WorkPlace & { creator: { _id: ObjectId; name: string; email: string; profileImage?: string } })[]> {
+  static async findAllWithCreators(): Promise<(WorkPlace & { creator: { _id: ObjectId; name: string; email: string; profileImage?: string; githubId?: string; googleId?: string; skillSet?: string; githubUrl?: string; linkedinUrl?: string; company?: string; mbti?: string; collaborationGoal?: string; createdAt: Date; updatedAt: Date; lastLoginAt?: Date } })[]> {
     const result = await this.collection.aggregate([
       {
         $lookup: {
@@ -109,12 +109,23 @@ export class WorkPlaceModel {
             _id: "$creator._id",
             name: "$creator.name",
             email: "$creator.email",
-            profileImage: "$creator.profileImage"
+            profileImage: "$creator.profileImage",
+            githubId: "$creator.githubId",
+            googleId: "$creator.googleId",
+            skillSet: "$creator.skillSet",
+            githubUrl: "$creator.githubUrl",
+            linkedinUrl: "$creator.linkedinUrl",
+            company: "$creator.company",
+            mbti: "$creator.mbti",
+            collaborationGoal: "$creator.collaborationGoal",
+            createdAt: "$creator.createdAt",
+            updatedAt: "$creator.updatedAt",
+            lastLoginAt: "$creator.lastLoginAt"
           }
         }
       }
     ]).toArray();
     
-    return result as (WorkPlace & { creator: { _id: ObjectId; name: string; email: string; profileImage?: string } })[];
+    return result as (WorkPlace & { creator: { _id: ObjectId; name: string; email: string; profileImage?: string; githubId?: string; googleId?: string; skillSet?: string; githubUrl?: string; linkedinUrl?: string; company?: string; mbti?: string; collaborationGoal?: string; createdAt: Date; updatedAt: Date; lastLoginAt?: Date } })[];
   }
 }
