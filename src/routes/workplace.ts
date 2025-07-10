@@ -9,6 +9,51 @@ import { authenticateJWT } from "../middleware/auth";
  *   description: Work place management endpoints
  */
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     WorkPlace:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Work place ID
+ *         name:
+ *           type: string
+ *           description: Work place name
+ *         latitude:
+ *           type: number
+ *           description: Latitude coordinate
+ *         longitude:
+ *           type: number
+ *           description: Longitude coordinate
+ *         description:
+ *           type: array
+ *           description: Array of descriptions with dates
+ *           items:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Date of the description entry
+ *               content:
+ *                 type: string
+ *                 description: Description content
+ *             required:
+ *               - date
+ *               - content
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Creation date
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update date
+ */
+
 const router = express.Router();
 
 /**
@@ -36,8 +81,21 @@ const router = express.Router();
  *                 type: number
  *                 description: Longitude of the work place
  *               description:
- *                 type: string
- *                 description: Description of work being done at this place
+ *                 type: array
+ *                 description: Array of descriptions with dates
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     date:
+ *                       type: string
+ *                       format: date-time
+ *                       description: Date of the description entry
+ *                     content:
+ *                       type: string
+ *                       description: Description content
+ *                   required:
+ *                     - date
+ *                     - content
  *             required:
  *               - name
  *               - latitude
@@ -284,7 +342,21 @@ router.get("/", authenticateJWT, async (req, res) => {
  *                       longitude:
  *                         type: number
  *                       description:
- *                         type: string
+ *                         type: array
+ *                         description: Array of descriptions with dates
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             date:
+ *                               type: string
+ *                               format: date-time
+ *                               description: Date of the description entry
+ *                             content:
+ *                               type: string
+ *                               description: Description content
+ *                           required:
+ *                             - date
+ *                             - content
  *                       createdAt:
  *                         type: string
  *                         format: date-time

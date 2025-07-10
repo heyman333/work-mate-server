@@ -208,41 +208,6 @@ const options: swaggerJSDoc.Options = {
             },
           },
         },
-        WorkPlace: {
-          type: "object",
-          properties: {
-            id: {
-              type: "string",
-              description: "Work place ID",
-            },
-            name: {
-              type: "string",
-              description: "Work place name",
-            },
-            latitude: {
-              type: "number",
-              description: "Latitude coordinate",
-            },
-            longitude: {
-              type: "number",
-              description: "Longitude coordinate",
-            },
-            description: {
-              type: "string",
-              description: "Description of work being done at this place",
-            },
-            createdAt: {
-              type: "string",
-              format: "date-time",
-              description: "Creation date",
-            },
-            updatedAt: {
-              type: "string",
-              format: "date-time",
-              description: "Last update date",
-            },
-          },
-        },
         WorkPlaceCreateRequest: {
           type: "object",
           required: ["name", "latitude", "longitude"],
@@ -260,8 +225,23 @@ const options: swaggerJSDoc.Options = {
               description: "Longitude coordinate",
             },
             description: {
-              type: "string",
-              description: "Description of work being done at this place",
+              type: "array",
+              description: "Array of descriptions with dates",
+              items: {
+                type: "object",
+                properties: {
+                  date: {
+                    type: "string",
+                    format: "date-time",
+                    description: "Date of the description entry",
+                  },
+                  content: {
+                    type: "string",
+                    description: "Description content",
+                  },
+                },
+                required: ["date", "content"],
+              },
             },
           },
         },
