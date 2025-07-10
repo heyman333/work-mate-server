@@ -20,20 +20,14 @@ export interface CreateWorkPlaceInput {
   name: string;
   latitude: number;
   longitude: number;
-  description?: {
-    date: Date;
-    content: string;
-  }[];
+  description?: string;
 }
 
 export interface UpdateWorkPlaceInput {
   name?: string;
   latitude?: number;
   longitude?: number;
-  description?: {
-    date: Date;
-    content: string;
-  }[];
+  description?: string;
 }
 
 export class WorkPlaceModel {
@@ -51,6 +45,7 @@ export class WorkPlaceModel {
     const workPlace: WorkPlace = {
       ...workPlaceData,
       userId,
+      description: workPlaceData.description ? [{ date: now, content: workPlaceData.description }] : undefined,
       createdAt: now,
       updatedAt: now,
     };
@@ -74,9 +69,28 @@ export class WorkPlaceModel {
     updateData: UpdateWorkPlaceInput
   ): Promise<WorkPlace | null> {
     const objectId = typeof id === "string" ? new ObjectId(id) : id;
+    const now = new Date();
+    
+    const { description, ...otherUpdateData } = updateData;
+    
+    const updateQuery: any = {
+      $set: {
+        ...otherUpdateData,
+        updatedAt: now,
+      },
+    };
+    
+    if (description !== undefined) {
+      if (description) {
+        updateQuery.$push = {
+          description: { date: now, content: description }
+        };
+      }
+    }
+    
     const result = await this.collection.findOneAndUpdate(
       { _id: objectId },
-      { $set: { ...updateData, updatedAt: new Date() } },
+      updateQuery,
       { returnDocument: "after" }
     );
     return result || null;

@@ -225,23 +225,8 @@ const options: swaggerJSDoc.Options = {
               description: "Longitude coordinate",
             },
             description: {
-              type: "array",
-              description: "Array of descriptions with dates",
-              items: {
-                type: "object",
-                properties: {
-                  date: {
-                    type: "string",
-                    format: "date-time",
-                    description: "Date of the description entry",
-                  },
-                  content: {
-                    type: "string",
-                    description: "Description content",
-                  },
-                },
-                required: ["date", "content"],
-              },
+              type: "string",
+              description: "Description of the work place",
             },
           },
         },

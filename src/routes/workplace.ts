@@ -81,21 +81,8 @@ const router = express.Router();
  *                 type: number
  *                 description: Longitude of the work place
  *               description:
- *                 type: array
- *                 description: Array of descriptions with dates
- *                 items:
- *                   type: object
- *                   properties:
- *                     date:
- *                       type: string
- *                       format: date-time
- *                       description: Date of the description entry
- *                     content:
- *                       type: string
- *                       description: Description content
- *                   required:
- *                     - date
- *                     - content
+ *                 type: string
+ *                 description: Description of the work place
  *             required:
  *               - name
  *               - latitude
@@ -249,6 +236,137 @@ router.delete("/:id", authenticateJWT, async (req, res) => {
     return res
       .status(500)
       .json({ error: "작업 장소 삭제 중 오류가 발생했습니다." });
+  }
+});
+
+/**
+ * @swagger
+ * /workplace/{id}:
+ *   put:
+ *     summary: Update a work place
+ *     tags: [WorkPlace]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Work place ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Name of the work place
+ *               latitude:
+ *                 type: number
+ *                 description: Latitude of the work place
+ *               longitude:
+ *                 type: number
+ *                 description: Longitude of the work place
+ *               description:
+ *                 type: string
+ *                 description: Description to add to the work place (will be appended to existing descriptions)
+ *     responses:
+ *       200:
+ *         description: Work place updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 workPlace:
+ *                   $ref: '#/components/schemas/WorkPlace'
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Forbidden - Not the owner
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Work place not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put("/:id", authenticateJWT, async (req, res) => {
+  const { id } = req.params;
+  const { name, latitude, longitude, description } = req.body;
+  const userId = req.user?._id?.toString();
+
+  if (!userId) {
+    return res.status(401).json({ error: "인증되지 않은 사용자입니다." });
+  }
+
+  try {
+    const workPlace = await WorkPlaceModel.findById(id);
+
+    if (!workPlace) {
+      return res.status(404).json({ error: "작업 장소를 찾을 수 없습니다." });
+    }
+
+    if (workPlace.userId.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ error: "작업 장소를 수정할 권한이 없습니다." });
+    }
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (latitude !== undefined) updateData.latitude = latitude;
+    if (longitude !== undefined) updateData.longitude = longitude;
+    if (description !== undefined) updateData.description = description;
+
+    const updatedWorkPlace = await WorkPlaceModel.update(id, updateData);
+
+    if (!updatedWorkPlace) {
+      return res.status(404).json({ error: "작업 장소를 찾을 수 없습니다." });
+    }
+
+    return res.json({
+      message: "작업 장소가 성공적으로 수정되었습니다.",
+      workPlace: {
+        id: updatedWorkPlace._id,
+        name: updatedWorkPlace.name,
+        latitude: updatedWorkPlace.latitude,
+        longitude: updatedWorkPlace.longitude,
+        description: updatedWorkPlace.description,
+        createdAt: updatedWorkPlace.createdAt,
+        updatedAt: updatedWorkPlace.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error("작업 장소 수정 오류:", error);
+    return res
+      .status(500)
+      .json({ error: "작업 장소 수정 중 오류가 발생했습니다." });
   }
 });
 
