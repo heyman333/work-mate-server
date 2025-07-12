@@ -7,7 +7,9 @@
     "start": "node dist/app.js",
     "dev": "nodemon src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate": "ts-node migrate.ts"
+    "migrate": "ts-node migrate.ts",
+    "test-type": "tsc -p tsconfig.json --noEmit",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -36,8 +38,15 @@
     "yaml": "^2.8.0"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "npm run test-type"
+    ]
   }
 }
