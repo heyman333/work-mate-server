@@ -102,6 +102,12 @@ export class WorkPlaceModel {
     return result.deletedCount > 0;
   }
 
+  static async deleteByUserId(userId: string | ObjectId): Promise<number> {
+    const objectId = typeof userId === "string" ? new ObjectId(userId) : userId;
+    const result = await this.collection.deleteMany({ userId: objectId });
+    return result.deletedCount;
+  }
+
   static async findByLocation(
     latitude: number,
     longitude: number,

@@ -529,4 +529,70 @@ router.post("/github/callback", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/delete:
+ *   delete:
+ *     summary: Delete user account (회원탈퇴)
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: User account successfully deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "회원탈퇴가 완료되었습니다."
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.delete("/delete", async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ error: "인증되지 않은 사용자입니다." });
+  }
+
+  try {
+    const deleted = await UserModel.delete(req.user._id);
+    
+    if (!deleted) {
+      return res.status(404).json({ error: "사용자를 찾을 수 없습니다." });
+    }
+
+    // Clear the auth cookie
+    res.clearCookie("auth_token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
+
+    return res.json({
+      message: "회원탈퇴가 완료되었습니다.",
+    });
+  } catch (error) {
+    console.error("회원탈퇴 오류:", error);
+    return res.status(500).json({ error: "회원탈퇴 중 오류가 발생했습니다." });
+  }
+});
+
 export default router;

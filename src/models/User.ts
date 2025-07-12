@@ -89,4 +89,15 @@ export class UserModel {
   static async getWorkPlaces(userId: string | ObjectId) {
     return await WorkPlaceModel.findByUserId(userId);
   }
+
+  static async delete(id: string | ObjectId): Promise<boolean> {
+    const objectId = typeof id === "string" ? new ObjectId(id) : id;
+    
+    // Delete all workplaces created by this user
+    await WorkPlaceModel.deleteByUserId(objectId);
+    
+    // Delete the user
+    const result = await this.collection.deleteOne({ _id: objectId });
+    return result.deletedCount > 0;
+  }
 }
