@@ -107,14 +107,28 @@ router.post("/logout", (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 router.post("/join", async (req, res) => {
-  const { email, name, profileImage, githubId, googleId, skillSet, githubUrl, linkedinUrl, company, mbti, collaborationGoal } = req.body;
+  const {
+    email,
+    name,
+    profileImage,
+    githubId,
+    googleId,
+    skillSet,
+    githubUrl,
+    linkedinUrl,
+    company,
+    mbti,
+    collaborationGoal,
+  } = req.body;
 
   if (!email || !name) {
     return res.status(400).json({ error: "이메일과 이름은 필수입니다." });
   }
 
   if (collaborationGoal && collaborationGoal.length > 1000) {
-    return res.status(400).json({ error: "협업 목표는 최대 1000자까지 입력 가능합니다." });
+    return res
+      .status(400)
+      .json({ error: "협업 목표는 최대 1000자까지 입력 가능합니다." });
   }
 
   try {
@@ -411,19 +425,30 @@ router.get("/me", (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 router.put("/update", async (req, res) => {
-  const { name, profileImage, skillSet, githubUrl, linkedinUrl, company, mbti, collaborationGoal } = req.body;
+  const {
+    name,
+    profileImage,
+    skillSet,
+    githubUrl,
+    linkedinUrl,
+    company,
+    mbti,
+    collaborationGoal,
+  } = req.body;
 
   if (!req.user || !req.user._id) {
     return res.status(401).json({ error: "인증되지 않은 사용자입니다." });
   }
 
   if (collaborationGoal && collaborationGoal.length > 1000) {
-    return res.status(400).json({ error: "협업 목표는 최대 1000자까지 입력 가능합니다." });
+    return res
+      .status(400)
+      .json({ error: "협업 목표는 최대 1000자까지 입력 가능합니다." });
   }
 
   try {
     const updateData: any = {};
-    
+
     if (name !== undefined) updateData.name = name;
     if (profileImage !== undefined) updateData.profileImage = profileImage;
     if (skillSet !== undefined) updateData.skillSet = skillSet;
@@ -431,10 +456,11 @@ router.put("/update", async (req, res) => {
     if (linkedinUrl !== undefined) updateData.linkedinUrl = linkedinUrl;
     if (company !== undefined) updateData.company = company;
     if (mbti !== undefined) updateData.mbti = mbti;
-    if (collaborationGoal !== undefined) updateData.collaborationGoal = collaborationGoal;
+    if (collaborationGoal !== undefined)
+      updateData.collaborationGoal = collaborationGoal;
 
     const updatedUser = await UserModel.update(req.user._id, updateData);
-    
+
     if (!updatedUser) {
       return res.status(404).json({ error: "사용자를 찾을 수 없습니다." });
     }
@@ -458,7 +484,9 @@ router.put("/update", async (req, res) => {
     });
   } catch (error) {
     console.error("사용자 정보 업데이트 오류:", error);
-    return res.status(500).json({ error: "사용자 정보 업데이트 중 오류가 발생했습니다." });
+    return res
+      .status(500)
+      .json({ error: "사용자 정보 업데이트 중 오류가 발생했습니다." });
   }
 });
 
@@ -576,7 +604,7 @@ router.delete("/delete", async (req, res) => {
 
   try {
     const deleted = await UserModel.delete(req.user._id);
-    
+
     if (!deleted) {
       return res.status(404).json({ error: "사용자를 찾을 수 없습니다." });
     }
@@ -679,7 +707,9 @@ router.post("/like/:targetUserId", async (req, res) => {
 
     const like = await LikeModel.create({ fromUserId, toUserId });
     if (!like) {
-      return res.status(500).json({ error: "좋아요 추가 중 오류가 발생했습니다." });
+      return res
+        .status(500)
+        .json({ error: "좋아요 추가 중 오류가 발생했습니다." });
     }
 
     return res.json({
@@ -687,7 +717,9 @@ router.post("/like/:targetUserId", async (req, res) => {
     });
   } catch (error) {
     console.error("좋아요 추가 오류:", error);
-    return res.status(500).json({ error: "좋아요 추가 중 오류가 발생했습니다." });
+    return res
+      .status(500)
+      .json({ error: "좋아요 추가 중 오류가 발생했습니다." });
   }
 });
 
@@ -769,7 +801,9 @@ router.delete("/unlike/:targetUserId", async (req, res) => {
 
     const success = await LikeModel.delete(fromUserId, toUserId);
     if (!success) {
-      return res.status(500).json({ error: "좋아요 취소 중 오류가 발생했습니다." });
+      return res
+        .status(500)
+        .json({ error: "좋아요 취소 중 오류가 발생했습니다." });
     }
 
     return res.json({
@@ -777,7 +811,9 @@ router.delete("/unlike/:targetUserId", async (req, res) => {
     });
   } catch (error) {
     console.error("좋아요 취소 오류:", error);
-    return res.status(500).json({ error: "좋아요 취소 중 오류가 발생했습니다." });
+    return res
+      .status(500)
+      .json({ error: "좋아요 취소 중 오류가 발생했습니다." });
   }
 });
 
@@ -826,9 +862,9 @@ router.get("/liked-users", async (req, res) => {
     const skip = (page - 1) * limit;
 
     const likedUsers = await LikeModel.getLikedUsers(userId, limit, skip);
-    
+
     return res.json({
-      users: likedUsers.map(item => ({
+      users: likedUsers.map((item) => ({
         ...item.user,
         id: item.user._id,
         likedAt: item.likedAt,
@@ -841,7 +877,9 @@ router.get("/liked-users", async (req, res) => {
     });
   } catch (error) {
     console.error("좋아요한 사용자 목록 조회 오류:", error);
-    return res.status(500).json({ error: "좋아요한 사용자 목록 조회 중 오류가 발생했습니다." });
+    return res
+      .status(500)
+      .json({ error: "좋아요한 사용자 목록 조회 중 오류가 발생했습니다." });
   }
 });
 
@@ -890,9 +928,9 @@ router.get("/liked-by-users", async (req, res) => {
     const skip = (page - 1) * limit;
 
     const likedByUsers = await LikeModel.getLikedByUsers(userId, limit, skip);
-    
+
     return res.json({
-      users: likedByUsers.map(item => ({
+      users: likedByUsers.map((item) => ({
         ...item.user,
         id: item.user._id,
         likedAt: item.likedAt,
@@ -905,7 +943,120 @@ router.get("/liked-by-users", async (req, res) => {
     });
   } catch (error) {
     console.error("나를 좋아요한 사용자 목록 조회 오류:", error);
-    return res.status(500).json({ error: "나를 좋아요한 사용자 목록 조회 중 오류가 발생했습니다." });
+    return res
+      .status(500)
+      .json({
+        error: "나를 좋아요한 사용자 목록 조회 중 오류가 발생했습니다.",
+      });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/user/{id}:
+ *   get:
+ *     summary: Get other user's public information
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to fetch information for
+ *     responses:
+ *       200:
+ *         description: User information retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     profileImage:
+ *                       type: string
+ *                     skillSet:
+ *                       type: string
+ *                     githubUrl:
+ *                       type: string
+ *                     linkedinUrl:
+ *                       type: string
+ *                     company:
+ *                       type: string
+ *                     mbti:
+ *                       type: string
+ *                     collaborationGoal:
+ *                       type: string
+ *                     likedCount:
+ *                       type: number
+ *                     likedByCount:
+ *                       type: number
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Invalid user ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/user/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "사용자 ID가 필요합니다." });
+  }
+
+  try {
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "유효하지 않은 사용자 ID입니다." });
+    }
+
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "사용자를 찾을 수 없습니다." });
+    }
+
+    return res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        profileImage: user.profileImage,
+        skillSet: user.skillSet,
+        githubUrl: user.githubUrl,
+        linkedinUrl: user.linkedinUrl,
+        company: user.company,
+        mbti: user.mbti,
+        collaborationGoal: user.collaborationGoal,
+        likedCount: user.likedCount || 0,
+        likedByCount: user.likedByCount || 0,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("사용자 정보 조회 오류:", error);
+    return res
+      .status(500)
+      .json({ error: "사용자 정보 조회 중 오류가 발생했습니다." });
   }
 });
 
