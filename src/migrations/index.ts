@@ -1,10 +1,16 @@
 import { migrateWorkPlaceDescription } from './001_migrate_workplace_description';
+import { migrateUserLikes } from './002_migrate_user_likes';
 
 export const migrations = [
   {
     name: '001_migrate_workplace_description',
     description: 'Migrate WorkPlace description from string to array of objects',
     run: migrateWorkPlaceDescription
+  },
+  {
+    name: '002_migrate_user_likes',
+    description: 'Migrate user likes from arrays to separate Like model with counts',
+    run: migrateUserLikes
   }
 ];
 

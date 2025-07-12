@@ -2,6 +2,8 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { UserModel } from "../models/User";
+import { LikeModel } from "../models/Like";
+import { ObjectId } from "mongodb";
 
 /**
  * @swagger
@@ -592,6 +594,318 @@ router.delete("/delete", async (req, res) => {
   } catch (error) {
     console.error("회원탈퇴 오류:", error);
     return res.status(500).json({ error: "회원탈퇴 중 오류가 발생했습니다." });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/like/{targetUserId}:
+ *   post:
+ *     summary: Like a user
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: targetUserId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user to like
+ *     responses:
+ *       200:
+ *         description: User liked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "사용자를 좋아요했습니다."
+ *       400:
+ *         description: Cannot like yourself or invalid user ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Target user not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post("/like/:targetUserId", async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ error: "인증되지 않은 사용자입니다." });
+  }
+
+  const { targetUserId } = req.params;
+
+  if (!targetUserId) {
+    return res.status(400).json({ error: "대상 사용자 ID가 필요합니다." });
+  }
+
+  if (req.user._id.toString() === targetUserId) {
+    return res.status(400).json({ error: "자신을 좋아요할 수 없습니다." });
+  }
+
+  try {
+    const targetUser = await UserModel.findById(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({ error: "대상 사용자를 찾을 수 없습니다." });
+    }
+
+    const fromUserId = new ObjectId(req.user._id);
+    const toUserId = new ObjectId(targetUserId);
+
+    const isAlreadyLiked = await LikeModel.exists(fromUserId, toUserId);
+    if (isAlreadyLiked) {
+      return res.status(400).json({ error: "이미 좋아요한 사용자입니다." });
+    }
+
+    const like = await LikeModel.create({ fromUserId, toUserId });
+    if (!like) {
+      return res.status(500).json({ error: "좋아요 추가 중 오류가 발생했습니다." });
+    }
+
+    return res.json({
+      message: "사용자를 좋아요했습니다.",
+    });
+  } catch (error) {
+    console.error("좋아요 추가 오류:", error);
+    return res.status(500).json({ error: "좋아요 추가 중 오류가 발생했습니다." });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/unlike/{targetUserId}:
+ *   delete:
+ *     summary: Unlike a user
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: targetUserId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user to unlike
+ *     responses:
+ *       200:
+ *         description: User unliked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "좋아요를 취소했습니다."
+ *       400:
+ *         description: Invalid user ID or not liked
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Target user not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.delete("/unlike/:targetUserId", async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ error: "인증되지 않은 사용자입니다." });
+  }
+
+  const { targetUserId } = req.params;
+
+  if (!targetUserId) {
+    return res.status(400).json({ error: "대상 사용자 ID가 필요합니다." });
+  }
+
+  try {
+    const targetUser = await UserModel.findById(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({ error: "대상 사용자를 찾을 수 없습니다." });
+    }
+
+    const fromUserId = new ObjectId(req.user._id);
+    const toUserId = new ObjectId(targetUserId);
+
+    const isLiked = await LikeModel.exists(fromUserId, toUserId);
+    if (!isLiked) {
+      return res.status(400).json({ error: "좋아요하지 않은 사용자입니다." });
+    }
+
+    const success = await LikeModel.delete(fromUserId, toUserId);
+    if (!success) {
+      return res.status(500).json({ error: "좋아요 취소 중 오류가 발생했습니다." });
+    }
+
+    return res.json({
+      message: "좋아요를 취소했습니다.",
+    });
+  } catch (error) {
+    console.error("좋아요 취소 오류:", error);
+    return res.status(500).json({ error: "좋아요 취소 중 오류가 발생했습니다." });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/liked-users:
+ *   get:
+ *     summary: Get list of users I liked
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of liked users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/liked-users", async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ error: "인증되지 않은 사용자입니다." });
+  }
+
+  try {
+    const userId = new ObjectId(req.user._id);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const likedUsers = await LikeModel.getLikedUsers(userId, limit, skip);
+    
+    return res.json({
+      users: likedUsers.map(item => ({
+        ...item.user,
+        id: item.user._id,
+        likedAt: item.likedAt,
+      })),
+      pagination: {
+        page,
+        limit,
+        hasMore: likedUsers.length === limit,
+      },
+    });
+  } catch (error) {
+    console.error("좋아요한 사용자 목록 조회 오류:", error);
+    return res.status(500).json({ error: "좋아요한 사용자 목록 조회 중 오류가 발생했습니다." });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/liked-by-users:
+ *   get:
+ *     summary: Get list of users who liked me
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users who liked me
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/liked-by-users", async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ error: "인증되지 않은 사용자입니다." });
+  }
+
+  try {
+    const userId = new ObjectId(req.user._id);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const likedByUsers = await LikeModel.getLikedByUsers(userId, limit, skip);
+    
+    return res.json({
+      users: likedByUsers.map(item => ({
+        ...item.user,
+        id: item.user._id,
+        likedAt: item.likedAt,
+      })),
+      pagination: {
+        page,
+        limit,
+        hasMore: likedByUsers.length === limit,
+      },
+    });
+  } catch (error) {
+    console.error("나를 좋아요한 사용자 목록 조회 오류:", error);
+    return res.status(500).json({ error: "나를 좋아요한 사용자 목록 조회 중 오류가 발생했습니다." });
   }
 });
 

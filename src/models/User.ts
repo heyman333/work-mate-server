@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { getDB } from "../config/database";
+import { getDB, getClient } from "../config/database";
 import { WorkPlaceModel } from "./WorkPlace";
 
 export interface User {
@@ -15,6 +15,8 @@ export interface User {
   company?: string;
   mbti?: string;
   collaborationGoal?: string;
+  likedCount?: number;
+  likedByCount?: number;
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt?: Date;
@@ -43,6 +45,8 @@ export class UserModel {
     const now = new Date();
     const user: User = {
       ...userData,
+      likedCount: 0,
+      likedByCount: 0,
       createdAt: now,
       updatedAt: now,
     };
@@ -68,7 +72,10 @@ export class UserModel {
     return await this.collection.findOne({ _id: objectId });
   }
 
-  static async update(id: string | ObjectId, updateData: Partial<User>): Promise<User | null> {
+  static async update(
+    id: string | ObjectId,
+    updateData: Partial<User>
+  ): Promise<User | null> {
     const objectId = typeof id === "string" ? new ObjectId(id) : id;
     const result = await this.collection.findOneAndUpdate(
       { _id: objectId },
@@ -90,12 +97,46 @@ export class UserModel {
     return await WorkPlaceModel.findByUserId(userId);
   }
 
+  static async incrementLikeCount(
+    userId: ObjectId, 
+    field: "likedCount" | "likedByCount", 
+    options?: { session?: any }
+  ): Promise<void> {
+    await this.collection.updateOne(
+      { _id: userId },
+      { 
+        $inc: { [field]: 1 },
+        $set: { updatedAt: new Date() }
+      },
+      options
+    );
+  }
+
+  static async decrementLikeCount(
+    userId: ObjectId, 
+    field: "likedCount" | "likedByCount", 
+    options?: { session?: any }
+  ): Promise<void> {
+    await this.collection.updateOne(
+      { _id: userId },
+      { 
+        $inc: { [field]: -1 },
+        $set: { updatedAt: new Date() }
+      },
+      options
+    );
+  }
+
   static async delete(id: string | ObjectId): Promise<boolean> {
     const objectId = typeof id === "string" ? new ObjectId(id) : id;
-    
+
     // Delete all workplaces created by this user
     await WorkPlaceModel.deleteByUserId(objectId);
-    
+
+    // Delete all likes related to this user (will be handled by LikeModel)
+    const { LikeModel } = await import("./Like");
+    await LikeModel.deleteByUserId(objectId);
+
     // Delete the user
     const result = await this.collection.deleteOne({ _id: objectId });
     return result.deletedCount > 0;

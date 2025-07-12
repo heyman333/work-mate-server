@@ -27,6 +27,13 @@ export const getDB = (): Db => {
   return db;
 };
 
+export const getClient = (): MongoClient => {
+  if (!client) {
+    throw new Error("Database not initialized. Call connectDB first.");
+  }
+  return client;
+};
+
 export const closeDB = async (): Promise<void> => {
   if (client) {
     await client.close();
