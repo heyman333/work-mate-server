@@ -9,6 +9,7 @@ import { connectDB } from "./config/database";
 import { setupSwagger } from "./config/swagger";
 import authRoutes from "./routes/auth";
 import workPlaceRoutes from "./routes/workplace";
+import messageRoutes from "./routes/message";
 dotenv.config();
 
 const app = express();
@@ -30,6 +31,7 @@ app.use(authenticateJWT);
 
 app.use("/auth", authRoutes);
 app.use("/workplace", workPlaceRoutes);
+app.use("/message", messageRoutes);
 
 setupSwagger(app);
 
